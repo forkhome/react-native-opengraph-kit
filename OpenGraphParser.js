@@ -8,6 +8,22 @@ function parseMeta(html, url, options) {
     const metaContentRegex = /<meta[^>]*content=[ '"]([^'"]*)[^>]*>/i;
     const meta = { url };
 
+    if (url.match('mp.weixin.qq.com')) {
+        let title = find_line(html, "var msg_title = ")
+        let desc = find_line(html, "var msg_desc = ")
+        let cdn_url = find_line(html, "var msg_cdn_url = ")
+
+        eval(title)
+        eval(desc)
+        eval(cdn_url)
+
+        meta['title'] = entities.decode(msg_title)
+        meta['image'] = entities.decode(msg_cdn_url)
+        meta['description'] = entities.decode(msg_desc)
+
+        return meta
+    }
+
     const matches = html.match(metaTagOGRegex);
 
     if (matches) {
@@ -65,6 +81,22 @@ function parseMeta(html, url, options) {
         return null;
     }
 }
+
+function find_line(str, sub) {
+    let begin = str.indexOf(sub)
+    if (begin == -1)
+      return ''
+    let end = str.indexOf('\n', begin)
+    if (end == -1)
+      end = str.indexOf('\r', begin)
+    if (end != -1) {
+      r = str.substring(begin, end)
+    } else {
+      r = str.substring(begin)
+    }
+    return r
+}
+
 
 function fallbackOnHTMLTags(htmlContent, metaDataObject) {
     if (!metaDataObject.description) {
